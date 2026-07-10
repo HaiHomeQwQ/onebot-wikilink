@@ -57,7 +57,17 @@ wss.on('connection', (ws) => {
       const groupConfig = getGroupConfig(String(msg.group_id));
       if (!groupConfig || !groupConfig.enabled) return;
 
-      const rawText = msg.raw_message || '';
+      console.log('[WikiLink] 收到消息:', JSON.stringify({ raw_message: msg.raw_message, message: msg.message }));
+
+      const rawText = msg.raw_message
+        || (typeof msg.message === 'string' ? msg.message : '')
+        || (Array.isArray(msg.message) ? msg.message.filter(s => s.type === 'text').map(s => s.data.text).join('') : '');
+
+      if (!rawText) {
+        console.log('[WikiLink] 收到的消息文本为空, message:', JSON.stringify(msg.message));
+        return;
+      }
+
       const processed = processMessage(rawText, groupConfig.wikiUrl);
 
       if (processed !== rawText) {
