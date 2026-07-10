@@ -27,19 +27,17 @@ function parseTemplateTitle(raw) {
   return 'Template:' + raw.replace(/ /g, '_');
 }
 
-function processMessage(raw, wikiUrl) {
-  let text = raw;
-  text = text.replace(/\[\[([^\]]+)\]\]/g, (match, content) => {
+function extractUrls(raw, wikiUrl) {
+  const urls = [];
+  raw.replace(/\[\[([^\]]+)\]\]/g, (match, content) => {
     const title = parseLinkTitle(content);
-    const url = wikiUrl.replace('{{title}}', title);
-    return encodeURI(url);
+    urls.push(encodeURI(wikiUrl.replace('{{title}}', title)));
   });
-  text = text.replace(/\{\{([^\}]+)\}\}/g, (match, content) => {
+  raw.replace(/\{\{([^\}]+)\}\}/g, (match, content) => {
     const title = parseTemplateTitle(content);
-    const url = wikiUrl.replace('{{title}}', title);
-    return encodeURI(url);
+    urls.push(encodeURI(wikiUrl.replace('{{title}}', title)));
   });
-  return text;
+  return urls;
 }
 
 const wss = new WebSocketServer({ host: config.ws.host, port: config.ws.port });
@@ -69,12 +67,12 @@ wss.on('connection', (ws) => {
         return;
       }
 
-      const processed = processMessage(rawText, groupConfig.wikiUrl);
+      const urls = extractUrls(rawText, groupConfig.wikiUrl);
 
-      if (processed !== rawText) {
+      if (urls.length) {
         ws.send(JSON.stringify({
           action: 'send_group_msg',
-          params: { group_id: msg.group_id, message: processed },
+          params: { group_id: msg.group_id, message: urls.join('\n') },
         }));
       }
     } catch (err) {
