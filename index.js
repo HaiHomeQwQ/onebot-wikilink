@@ -59,9 +59,10 @@ wss.on('connection', (ws) => {
 
       console.log('[WikiLink] 收到消息:', JSON.stringify({ raw_message: msg.raw_message, message: msg.message }));
 
-      const rawText = msg.raw_message
+      const rawText = (Array.isArray(msg.message) ? msg.message.filter(s => s.type === 'text').map(s => s.data.text).join('') : '')
         || (typeof msg.message === 'string' ? msg.message : '')
-        || (Array.isArray(msg.message) ? msg.message.filter(s => s.type === 'text').map(s => s.data.text).join('') : '');
+        || msg.raw_message
+        || '';
 
       if (!rawText) {
         console.log('[WikiLink] 收到的消息文本为空, message:', JSON.stringify(msg.message));
