@@ -55,21 +55,18 @@ wss.on('connection', (ws) => {
       const groupConfig = getGroupConfig(String(msg.group_id));
       if (!groupConfig || !groupConfig.enabled) return;
 
-      console.log('[WikiLink] 收到消息:', JSON.stringify({ raw_message: msg.raw_message, message: msg.message }));
-
       const rawText = (Array.isArray(msg.message) ? msg.message.filter(s => s.type === 'text').map(s => s.data.text).join('') : '')
         || (typeof msg.message === 'string' ? msg.message : '')
         || msg.raw_message
         || '';
 
-      if (!rawText) {
-        console.log('[WikiLink] 收到的消息文本为空, message:', JSON.stringify(msg.message));
-        return;
-      }
+      if (!rawText) return;
 
       const urls = extractUrls(rawText, groupConfig.wikiUrl);
 
       if (urls.length) {
+        console.log(`[WikiLink] << ${msg.group_id} ${rawText}`);
+        console.log(`[WikiLink] >>\n${urls.map(u => '  ' + u).join('\n')}`);
         ws.send(JSON.stringify({
           action: 'send_group_msg',
           params: { group_id: msg.group_id, message: urls.join('\n') },
