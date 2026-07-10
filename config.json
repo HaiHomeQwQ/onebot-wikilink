@@ -1,0 +1,11 @@
+{
+  "ws": {
+    "host": "0.0.0.0",
+    "port": 6700
+  },
+  "default": {
+    "enabled": true,
+    "wikiUrl": "https://zh.wikipedia.org/wiki/{{title}}"
+  },
+  "groups": {}
+}
